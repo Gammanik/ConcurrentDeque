@@ -73,9 +73,36 @@ class AbstractConcurrentDequeTest {
     }
 
     @Test
-    fun shouldPollEnd() {
-
+    fun shouldPollLast() {
+        assertNull(dq.pollFirst())
+        dq.addFirst(1)
+        assertEquals(dq.pollLast(), 1)
     }
 
+    @Test
+    fun shouldReturnNullIfEmpty() {
+        dq.addLast(1)
+        assertEquals(dq.pollFirst(), 1)
+        assertNull(dq.pollLast())
+    }
 
+    @Test
+    fun lastFirstTest() {
+        dq.addLast(-6)
+        assertEquals(dq.pollFirst(), -6)
+        dq.addLast(1)
+        assertEquals(dq.pollFirst(), 1)
+    }
+
+    @Test
+    fun clearTest() {
+        dq.addLast(-6)
+        dq.addLast(1)
+        dq.addFirst(-1)
+        dq.clear()
+
+        assertNull(dq.pollFirst())
+        assertNull(dq.pollLast())
+        assertTrue(dq.isEmpty)
+    }
 }

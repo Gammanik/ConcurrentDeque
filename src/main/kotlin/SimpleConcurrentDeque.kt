@@ -1,73 +1,82 @@
+import java.util.concurrent.locks.ReentrantLock
+
 class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
     override val isEmpty: Boolean
-        get() { return size == 0 }
+        @Synchronized get() { return size == 0 }
 
-    override var size: Int = 0
+    private val lock = ReentrantLock()
 
-    private var head = Node(null)
-    private var tail = Node(null)
+    @Volatile override var size: Int = 0
+    @Volatile private var head = Node(null)
+    @Volatile private var tail = Node(null)
 
     init {
-        tail.prev = head
-        head.next = tail
+        synchronized(this) {
+            tail.prev = head
+            head.next = tail
+        }
     }
 
-    override fun clear() {
+    @Synchronized override fun clear() {
         size = 0
         head.next = tail
         tail.prev = head
     }
 
-    override fun addFirst(value: T) {
-        val newNode = Node(value)
+    @Synchronized override fun addFirst(value: T) {
+            val newNode = Node(value)
 
-        val tmp = head.next
-        tmp?.prev = newNode
+            val tmp = head.next
+            tmp?.prev = newNode
 
-        head.next = newNode
-        newNode.prev = head
-        newNode.next = tmp
-        size += 1
+            head.next = newNode
+            newNode.prev = head
+            newNode.next = tmp
+            size += 1
     }
 
-    override fun addLast(value: T) {
-        val newNode = Node(value)
+    @Synchronized override fun addLast(value: T) { // todo: insertFrom
+            val newNode = Node(value)
 
-        val tmp = tail.prev
-        tmp?.next = newNode
+            val tmp = tail.prev
+            tmp?.next = newNode
 
-        tail.prev = newNode
-        newNode.prev = tmp
-        newNode.next = tail
+            tail.prev = newNode
+            newNode.prev = tmp
+            newNode.next = tail
 
-        size += 1
+            size += 1
     }
 
-    override fun peekFirst(): T? {
+    @Synchronized override fun peekFirst(): T? {
         return head.next?.value
     }
 
-    override fun peekLast(): T? {
+    @Synchronized override fun peekLast(): T? {
         return tail.prev?.value
     }
 
-    override fun pollFirst(): T? {
-        val value = head.next?.value
-        head.next = head.next?.next
+    @Synchronized override fun pollFirst(): T? {
+        if (isEmpty) return null
 
-        if (!isEmpty) { size -= 1 }
-        return value
+        val firstNode = head.next
+        head.next = firstNode?.next
+        firstNode?.next?.prev = head
+        size -= 1
+        return firstNode?.value
     }
 
-    override fun pollLast(): T? {
-        val value = tail.prev?.value
-        tail.prev = tail.prev?.prev
+    @Synchronized override fun pollLast(): T? {
+        if (isEmpty) return null
 
-        if (!isEmpty) { size -= 1 }
-        return value
+        val lastNode = tail.prev
+        tail.prev = lastNode?.prev
+        lastNode?.prev?.next = tail
+        size -= 1
+        return lastNode?.value
     }
 
-    override fun contains(value: T): Boolean {
+    @Synchronized override fun contains(value: T): Boolean {
         var tmp = head.next
 
         while (tmp?.next != null) {
@@ -82,8 +91,8 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
 
 
     inner class Node(val value: T?) {
-        var prev: Node? = null
-        var next: Node? = null
+        @Volatile var prev: Node? = null
+        @Volatile var next: Node? = null
     }
 
     override fun toString(): String {
@@ -96,7 +105,7 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
         return arr.joinToString(", ", "{", "}")
     }
 
-    override fun equals(other: Any?): Boolean {
+    @Synchronized override fun equals(other: Any?): Boolean {
         if (other !is SimpleConcurrentDeque<*>) {
             return false
         }
@@ -127,7 +136,6 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
             tmp = tmp.next
             hashCode = 31 * hashCode + (tmp?.hashCode() ?: 0)
         }
-
         return hashCode
     }
 }
