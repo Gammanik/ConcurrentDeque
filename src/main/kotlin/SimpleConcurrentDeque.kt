@@ -1,10 +1,6 @@
-import java.util.concurrent.locks.ReentrantLock
-
 class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
     override val isEmpty: Boolean
         @Synchronized get() { return size == 0 }
-
-    private val lock = ReentrantLock()
 
     @Volatile override var size: Int = 0
     @Volatile private var head = Node(null)
@@ -24,28 +20,27 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
     }
 
     @Synchronized override fun addFirst(value: T) {
-            val newNode = Node(value)
+        val newNode = Node(value)
 
-            val tmp = head.next
-            tmp?.prev = newNode
+        val tmp = head.next
+        tmp?.prev = newNode
 
-            head.next = newNode
-            newNode.prev = head
-            newNode.next = tmp
-            size += 1
+        head.next = newNode
+        newNode.prev = head
+        newNode.next = tmp
+        size += 1
     }
 
-    @Synchronized override fun addLast(value: T) { // todo: insertFrom
-            val newNode = Node(value)
+    @Synchronized override fun addLast(value: T) {
+        val newNode = Node(value)
+        val tmp = tail.prev
+        tmp?.next = newNode
 
-            val tmp = tail.prev
-            tmp?.next = newNode
+        tail.prev = newNode
+        newNode.prev = tmp
+        newNode.next = tail
 
-            tail.prev = newNode
-            newNode.prev = tmp
-            newNode.next = tail
-
-            size += 1
+        size += 1
     }
 
     @Synchronized override fun peekFirst(): T? {
@@ -105,6 +100,8 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
         return arr.joinToString(", ", "{", "}")
     }
 
+    // todo: Use Fine-Grained or Lazy synchronization
+    //  i.e. lock only one current nodes not the whole list
     @Synchronized override fun equals(other: Any?): Boolean {
         if (other !is SimpleConcurrentDeque<*>) {
             return false

@@ -92,6 +92,11 @@ class AbstractConcurrentDequeTest {
         assertEquals(dq.pollFirst(), -6)
         dq.addLast(1)
         assertEquals(dq.pollFirst(), 1)
+
+        dq.addFirst(-6)
+        assertEquals(dq.pollLast(), -6)
+        dq.addLast(-5)
+        assertEquals(dq.pollLast(), -5)
     }
 
     @Test
