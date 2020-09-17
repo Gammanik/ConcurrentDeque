@@ -22,7 +22,7 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
         val newNode = Node(value)
 
         val tmp = head.next
-        tmp?.prev = newNode
+        tmp.prev = newNode
 
         head.next = newNode
         newNode.prev = head
@@ -33,7 +33,7 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
     @Synchronized override fun addLast(value: T) {
         val newNode = Node(value)
         val tmp = tail.prev
-        tmp?.next = newNode
+        tmp.next = newNode
 
         tail.prev = newNode
         newNode.prev = tmp
@@ -43,38 +43,38 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
     }
 
     @Synchronized override fun peekFirst(): T? {
-        return head.next?.value
+        return head.next.value
     }
 
     @Synchronized override fun peekLast(): T? {
-        return tail.prev?.value
+        return tail.prev.value
     }
 
     @Synchronized override fun pollFirst(): T? {
         if (isEmpty) return null
 
         val firstNode = head.next
-        head.next = firstNode?.next
-        firstNode?.next?.prev = head
+        head.next = firstNode.next
+        firstNode.next.prev = head
         size -= 1
-        return firstNode?.value
+        return firstNode.value
     }
 
     @Synchronized override fun pollLast(): T? {
         if (isEmpty) return null
 
         val lastNode = tail.prev
-        tail.prev = lastNode?.prev
-        lastNode?.prev?.next = tail
+        tail.prev = lastNode.prev
+        lastNode.prev.next = tail
         size -= 1
-        return lastNode?.value
+        return lastNode.value
     }
 
     @Synchronized override fun contains(value: T): Boolean {
         var tmp = head.next
 
         while (tmp != tail) {
-            if (tmp!!.value == value) {
+            if (tmp.value == value) {
                 return true
             }
             tmp = tmp.next
@@ -85,15 +85,15 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
 
 
     inner class Node(val value: T?) {
-        @Volatile var prev: Node? = null
-        @Volatile var next: Node? = null
+        @Volatile var prev: Node = this
+        @Volatile var next: Node = this
     }
 
     override fun toString(): String {
         var tmp = head.next
         val arr = ArrayList<String>()
         while (tmp != tail) {
-            arr.add(tmp!!.value.toString())
+            arr.add(tmp.value.toString())
             tmp = tmp.next
         }
         return arr.joinToString(", ", "{", "}")
@@ -116,8 +116,8 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
             if (tmpThis != tmpOther) {
                 return false
             }
-            tmpThis = tmpThis!!.next
-            tmpOther = tmpOther!!.next
+            tmpThis = tmpThis.next
+            tmpOther = tmpOther.next
         }
 
         return true
@@ -129,7 +129,7 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
 
         while (tmp != tail) {
             hashCode = 31 * hashCode + (tmp.hashCode())
-            tmp = tmp!!.next
+            tmp = tmp.next
         }
         return hashCode
     }
