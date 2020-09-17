@@ -2,18 +2,17 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
     override val isEmpty: Boolean
         @Synchronized get() { return size == 0 }
 
-    @Volatile override var size: Int = 0
-    @Volatile private var head = Node(null)
-    @Volatile private var tail = Node(null)
+    @Volatile override var size: Int = 0; private set
+    private val head = Node(null)
+    private val tail = Node(null)
 
-    init {
-        synchronized(this) {
-            tail.prev = head
-            head.next = tail
-        }
-    }
+    init { initialize() }
 
     @Synchronized override fun clear() {
+        initialize()
+    }
+
+    private fun initialize() {
         size = 0
         head.next = tail
         tail.prev = head
@@ -74,8 +73,8 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
     @Synchronized override fun contains(value: T): Boolean {
         var tmp = head.next
 
-        while (tmp?.next != null) {
-            if (tmp.value == value) {
+        while (tmp != tail) {
+            if (tmp!!.value == value) {
                 return true
             }
             tmp = tmp.next
@@ -93,15 +92,14 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
     override fun toString(): String {
         var tmp = head.next
         val arr = ArrayList<String>()
-        while (tmp?.next != null) {
-            arr.add(tmp.value.toString())
+        while (tmp != tail) {
+            arr.add(tmp!!.value.toString())
             tmp = tmp.next
         }
         return arr.joinToString(", ", "{", "}")
     }
 
-    // todo: Use Fine-Grained or Lazy synchronization
-    //  i.e. lock only one current nodes not the whole list
+
     @Synchronized override fun equals(other: Any?): Boolean {
         if (other !is SimpleConcurrentDeque<*>) {
             return false
@@ -114,12 +112,12 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
         var tmpThis = head.next
         var tmpOther = other.head.next
 
-        while (tmpThis?.next != null) {
+        while (tmpThis != tail) {
             if (tmpThis != tmpOther) {
                 return false
             }
-            tmpThis = tmpThis.next
-            tmpOther = tmpOther.next
+            tmpThis = tmpThis!!.next
+            tmpOther = tmpOther!!.next
         }
 
         return true
@@ -129,9 +127,9 @@ class SimpleConcurrentDeque<T>: ConcurrentDeque<T> {
         var tmp = head.next
         var hashCode = 1
 
-        while (tmp?.next != null) {
-            tmp = tmp.next
-            hashCode = 31 * hashCode + (tmp?.hashCode() ?: 0)
+        while (tmp != tail) {
+            hashCode = 31 * hashCode + (tmp.hashCode())
+            tmp = tmp!!.next
         }
         return hashCode
     }
